@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
@@ -8,13 +10,18 @@ const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 
-mongoose.connect('mongodb+srv://admin:admin@cluster0-zppn3.mongodb.net/test?retryWrites=true&w=majority', {
+// MongoDB Connection
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.catch((error) => {
+  console.error('MongoDB connection error:', error.message);
+  process.exit(1);
 });
 
 app.use((req, res, next) => {
   req.io = io;
-
   next();
 });
 
@@ -24,4 +31,8 @@ app.use('/files', express.static(path.resolve(__dirname, '..', 'uploads', 'resiz
 
 app.use(require('./routes'));
 
-server.listen(2222);
+const PORT = process.env.PORT || 2222;
+
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
